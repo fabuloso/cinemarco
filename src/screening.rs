@@ -1,12 +1,19 @@
+impl ScreeningSchedule {
+    pub fn book(&self, row: u16, number: u16) {
+        let free = self.room.is_free(row, number);
+        if free {
+            self.room.reserve_seat(row, number);
+        }
+    }
+}
 pub struct ScreeningSchedule {
-    id: u32,
-    screening: Screening,
-    room: Room,
+    pub id: u32,
+    pub screening: Screening,
+    pub room: Room,
 }
 
 pub struct Screening {
     pub movie: MovieId,
-    pub room: RoomId,
     pub startTime: StartTime,
 }
 
@@ -28,9 +35,13 @@ pub struct Movie {
     publisher: Publisher,
 }
 
-pub struct MovieId(u32);
+pub struct MovieId {
+    pub id: u32,
+}
 pub struct Year(u32);
-pub struct RoomId(u32);
+pub struct RoomId {
+    pub id: u32,
+}
 
 pub struct Director {
     name: String,
@@ -48,13 +59,40 @@ pub struct Actor {
 }
 
 pub struct Room {
-    id: RoomId,
-    name: String,
-    seats: Vec<Seat>,
+    pub id: RoomId,
+    pub name: String,
+    pub seats: Seats,
 }
+
+pub struct Seats {}
 
 pub struct Seat {
     row: u16,
     number: u16,
     dbox: bool,
+}
+
+impl Seat {
+    fn is_already_reserved(&self) -> bool {
+        true
+    }
+}
+
+impl Seats {
+    fn at(&self, row: u16, number: u16) -> Result<Seat, String> {
+        Ok(Seat {
+            row,
+            number,
+            dbox: false,
+        })
+    }
+}
+
+impl Room {
+    fn is_free(&self, row: u16, number: u16) -> bool {
+        let seat = self.seats.at(row, number);
+        seat.unwrap().is_already_reserved()
+    }
+
+    fn reserve_seat(&self, row: u16, number: u16) {}
 }

@@ -1,4 +1,4 @@
 pub struct ReserveSeatCommand {
-    screeningId: u32,
-    seat: (u16, u16),
+    pub screeningId: u32,
+    pub seat: (u16, u16),
 }
