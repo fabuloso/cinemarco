@@ -1,5 +1,5 @@
 impl ScreeningSchedule {
-    pub fn book(&self, row: u16, number: u16) {
+    pub fn book(&mut self, row: u16, number: u16) {
         let free = self.room.is_free(row, number);
         if free {
             self.room.reserve_seat(row, number);
@@ -70,11 +70,12 @@ pub struct Seat {
     row: u16,
     number: u16,
     dbox: bool,
+    reserved: bool,
 }
 
 impl Seat {
     fn is_already_reserved(&self) -> bool {
-        true
+        self.reserved
     }
 }
 
@@ -84,6 +85,7 @@ impl Seats {
             row,
             number,
             dbox: false,
+            reserved: false,
         })
     }
 }
@@ -94,5 +96,8 @@ impl Room {
         seat.unwrap().is_already_reserved()
     }
 
-    fn reserve_seat(&self, row: u16, number: u16) {}
+    fn reserve_seat(&mut self, row: u16, number: u16) {
+        let mut seat = self.seats.at(row, number).unwrap();
+        seat.reserved = true;
+    }
 }

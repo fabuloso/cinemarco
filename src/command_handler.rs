@@ -1,9 +1,9 @@
-use std::collections::HashMap;
+use std::{borrow::BorrowMut, ops::Deref};
 
 use crate::{
     commands::ReserveSeatCommand,
     schedules::Schedules,
-    screening::{MovieId, Room, RoomId, Screening, ScreeningSchedule, Seats, StartTime},
+    screening::{self, MovieId, Room, RoomId, Screening, ScreeningSchedule, Seats, StartTime},
 };
 pub struct ReserveSeatCommandHandler {
     schedules: Schedules,
@@ -11,10 +11,14 @@ pub struct ReserveSeatCommandHandler {
 
 impl ReserveSeatCommandHandler {
     pub fn handle(&mut self, command: &ReserveSeatCommand) -> Result<(), String> {
-        let schedule = self.schedules.with(command.screeningId);
+        let mut schedule = self.schedules.with(command.screeningId);
+
         match schedule {
-            Some(screening_schedule) => Ok(screening_schedule.book(command.seat.0, command.seat.1)),
-            None => Err("No screening scheduled".to_string()),
+            Some(screening) => {
+                let mut screening: &ScreeningSchedule = screening;
+                Ok(screening.book(command.seat.0, command.seat.1))
+            }
+            None => todo!(),
         }
     }
 }
@@ -32,6 +36,26 @@ fn user_books_a_movie_ticket() {
     let command_result = command_handler.handle(&command);
 
     assert_eq!(Ok(()), command_result)
+}
+
+#[test]
+fn user_cannot_book_an_already_taken_seat() {
+    let mut schedules = Schedules::new();
+    schedules.add(123, screening_schedule());
+
+    let mut command_handler = ReserveSeatCommandHandler { schedules };
+    let command = ReserveSeatCommand {
+        screeningId: 123,
+        seat: (1, 1),
+    };
+
+    let _ = command_handler.handle(&command);
+    let command_result = command_handler.handle(&command);
+
+    assert_eq!(
+        Err("Seat already taken, try again".to_string()),
+        command_result
+    )
 }
 
 fn screening_schedule() -> ScreeningSchedule {
