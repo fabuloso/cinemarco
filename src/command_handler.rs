@@ -1,9 +1,9 @@
-use std::{borrow::BorrowMut, ops::Deref};
+
 
 use crate::{
     commands::ReserveSeatCommand,
     schedules::Schedules,
-    screening::{self, MovieId, Room, RoomId, Screening, ScreeningSchedule, Seats, StartTime},
+    screening::{MovieId, Room, RoomId, Screening, ScreeningSchedule, Seat, Seats, StartTime},
 };
 pub struct ReserveSeatCommandHandler {
     schedules: Schedules,
@@ -11,12 +11,16 @@ pub struct ReserveSeatCommandHandler {
 
 impl ReserveSeatCommandHandler {
     pub fn handle(&mut self, command: &ReserveSeatCommand) -> Result<(), String> {
-        let mut schedule = self.schedules.with(command.screeningId);
+        let schedule = self.schedules.with(command.screeningId);
 
         match schedule {
             Some(screening) => {
-                let mut screening: &ScreeningSchedule = screening;
-                Ok(screening.book(command.seat.0, command.seat.1))
+                let result = screening.book(command.seat.0, command.seat.1);
+                if result {
+                    Ok(())
+                } else {
+                    Err("Seat already taken, try again".to_string())
+                }
             }
             None => todo!(),
         }
@@ -74,7 +78,49 @@ fn screening_schedule() -> ScreeningSchedule {
         room: Room {
             id: RoomId { id: 1 },
             name: "Green".to_string(),
-            seats: Seats {},
+            seats: Seats {
+                seats: [
+                    (
+                        "0_0".to_string(),
+                        Seat {
+                            row: 0,
+                            number: 0,
+                            dbox: false,
+                            reserved: false,
+                        },
+                    ),
+                    (
+                        "0_1".to_string(),
+                        Seat {
+                            row: 0,
+                            number: 1,
+                            dbox: false,
+                            reserved: false,
+                        },
+                    ),
+                    (
+                        "1_0".to_string(),
+                        Seat {
+                            row: 1,
+                            number: 0,
+                            dbox: false,
+                            reserved: false,
+                        },
+                    ),
+                    (
+                        "1_1".to_string(),
+                        Seat {
+                            row: 1,
+                            number: 1,
+                            dbox: false,
+                            reserved: false,
+                        },
+                    ),
+                ]
+                .iter()
+                .cloned()
+                .collect(),
+            },
         },
     }
 }
