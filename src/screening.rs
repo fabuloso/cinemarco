@@ -1,13 +1,22 @@
 use std::collections::HashMap;
 
+use crate::events::event::Event;
+
 impl ScreeningSchedule {
     pub fn book(&mut self, row: u16, number: u16) -> bool {
-        let free = self.room.is_free(row, number);
-        if free {
+        if self.room.is_free(row, number) {
             self.room.reserve_seat(row, number);
             true
         } else {
             false
+        }
+    }
+
+    pub fn apply(&mut self, event: Event) {
+        match event {
+            Event::SeatReserved(event) => {
+                self.book(event.seat.0, event.seat.1);
+            }
         }
     }
 }
@@ -19,7 +28,7 @@ pub struct ScreeningSchedule {
 
 pub struct Screening {
     pub movie: MovieId,
-    pub startTime: StartTime,
+    pub start_time: StartTime,
 }
 
 pub struct StartTime {
@@ -30,16 +39,6 @@ pub struct StartTime {
     pub year: u16,
 }
 
-pub struct Movie {
-    id: MovieId,
-    title: String,
-    subtitle: String,
-    year: Year,
-    cast: Vec<Actor>,
-    director: Director,
-    publisher: Publisher,
-}
-
 pub struct MovieId {
     pub id: u32,
 }
@@ -47,21 +46,6 @@ pub struct Year(u32);
 
 pub struct RoomId {
     pub id: u32,
-}
-
-pub struct Director {
-    name: String,
-    surname: String,
-}
-
-pub struct Publisher {
-    name: String,
-    surname: String,
-}
-
-pub struct Actor {
-    name: String,
-    surname: String,
 }
 
 pub struct Room {
